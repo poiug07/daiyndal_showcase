@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Регистрация{% endblock %}
+{% block content%}
+{% load static %}
+<body style="background-color: #F5F5F5;">
+    <div class="container-fluid mx-auto">
+        <section style="margin: 3em 0em;">
+            <div class="row d-flex">
+                <div class="col text-center"><img src="{% static 'img/daiyndal-icon.png' %}" width="162" height="36"></div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <h2 class="text-center mt-4" style="font-family: Raleway, sans-serif;font-weight: bold;height: 36px;font-size: 36px;">Регистрация</h2>
+                    <p class="text-center text-secondary my-3" style="font-family: Raleway;">Создайте новый аккаунт в daiyndal</p>
+                </div>
+            </div>
+            <div class="row d-flex justify-content-xl-center">
+                <div class="col offset-xl-0 text-center">
+                    <div id="app" class="mx-auto px-3 px-md-5 py-4" style="background: var(--bs-white);max-width: 570px;border-radius: 1.2rem;">
+                        <form @submit="formValidate" action="/register/" method="POST" novalidate>
+                            {% csrf_token %}
+                            <div class="text-start mb-3">
+                                <label class="form-label text-start" for="{{ form.email.id_for_label }}" style="width: 100%;font-size: 18px;">Почта</label>
+                                {{ form.email }}
+                                <small class="form-text text-danger" v-if="!validateEmail">Введите верный адрес электронной почты</small>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-start" for="{{ form.user_firstname.id_for_label }}" style="width: 100%;font-size: 18px;">Имя</label>
+                                {{ form.user_firstname }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-start" for="{{ form.user_lastname.id_for_label }}" style="width: 100%;font-size: 18px;">Фамилия</label>
+                                {{ form.user_lastname }}
+                            </div>
+                            <div class="text-start mb-3">
+                                <label class="form-label text-start" for="{{form.password.id_for_label}}" style="width: 100%;font-size: 18px;">Пароль</label>
+                                {{ form.password }}
+                                <small class="form-text" :class="{'text-danger': errors.password}" id="passwordHelpBlock">[[passwordHelp]]</small>
+                            </div>
+                            <div class="text-start mb-3">
+                                <label class="form-label text-start" for="{{form.password_2.id_for_label}}" style="width: 100%;font-size: 18px;">Повтор пароля</label>
+                                {{ form.password_2 }}
+                                <small class="form-text text-danger">[[password2Help]]</small>
+                            </div>
+                            <button id="registerButton" class="btn btn-primary d-block" type="submit" style="width: 100%;border-radius: 0.7rem;height: 50px;">Регистрация</button>
+                            <label class="form-label text-secondary d-block my-2" style="font-family: Roboto, sans-serif;margin: 0;">или</label>
+                            <a href="/login/" class="btn btn-outline-primary d-block" style="width: 100%;height: 50px;line-height: 2;">Войти</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+    <script src="{% static '/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script>
+    const App = {
+        data() {
+            return {
+                "email": "",
+                "user_firstname": "",
+                "user_lastname": "",
+                "password": "",
+                "password_2": "",
+                "errors": {
+                    "email": false,
+                    "user_firstname": false,
+                    "user_lastname": false,
+                    "password": false,
+                    "password_2": false,
+                },
+            }
+        },
+        computed: {
+            validateEmail() {
+                if (this.email == ""){
+                    return true;
+                }
+                const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+                return re.test(String(this.email).toLowerCase());
+            },
+            validatePassword() {
+                if (this.password.length < 8 || this.password.length > 20){
+                    return false;
+                }
+                const re = /^(?=.*\d)(?=.*[a-zA-Z])[\w!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,20}$/
+                if (!re.test(this.password)){
+                    return false;
+                }
+                return true;
+            },
+            passwordHelp(){
+                if (this.password == "") {
+                    return "Ваш пароль должен быть 8-20 символов в длину, содержать только английские буквы, специальные символы и цифры.";
+                }
+                if (this.password.length < 8 || this.password.length > 20){
+                    return "Ваш пароль должен быть 8-20 символов в длину.";
+                }
+                const re = /^(?=.*\d)(?=.*[a-zA-Z])[\w!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,20}$/
+                if (!re.test(this.password)){
+                    return "Ваш пароль должен содержать как минимум 1 букву и 1 цифру.";
+                }
+                return "";
+            },
+            password2Help(){
+                if (this.password!=this.password_2){
+                    return "Пароли не совпадают";
+                }
+                return "";
+            }
+        },
+        methods: {
+            formValidate: function (e) {
+                let has_error = false;
+                if (!this.validateEmail || this.email=="") {
+                    this.errors.email = true;
+                    has_error = true;
+                }
+                if (!this.validatePassword || this.password=="") {
+                    this.errors.password = true;
+                    has_error = true;
+                }
+                if (this.password!=this.password_2) {
+                    this.errors.password_2 = true;
+                    has_error = true;
+                }
+                if (this.user_firstname==""){
+                    this.errors.user_firstname = true;
+                    has_error = true;    
+                }
+                if (this.user_lastname==""){
+                    this.errors.user_lastname = true;
+                    has_error = true;    
+                }
+
+                if(has_error){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                return true;
+            }
+        },
+        delimiters: ["[[", "]]"]
+    }
+
+    var app = Vue.createApp(App);
+    app.mount("#app");
+    </script>
+</body>
+{% endblock content %}

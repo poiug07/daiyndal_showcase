@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block title %}Тест{% endblock title %}
+{% block content %}
+{% load static %}
+<body id="app" style="background-color: #F5F5F5">
+    {% include 'myapp/partials/navbar-step.html' %}
+    <div class="main gx-0">
+        <!-- Sidebar -->
+        <div class="d-none d-md-inline-flex flex-column flex-shrink-0 bg-white sidebar" style="max-width: 280px; min-width: 220px">
+            <div class="sidebar__header mb-3 p-3">
+                <h4>{{step.unit.theme.course.course_name}}</h4>
+                <p class="mb-1 small"><span id="percentage">[[passed_percentage]]</span>% Пройдено</p>
+                <div class="progress">
+                    <div class="progress-bar" :aria-valuenow="passed_percentage" aria-valuemin="0" aria-valuemax="100" :style="{width: passed_percentage+'%'}"><span class="visually-hidden">[[passed_percentage]]%</span></div>
+                </div>
+            </div>
+            <ul class="nav"></ul>
+            <div class="flex-column mb-auto">
+                {% for theme_obj in themes_obj %}
+                <div class="sidebar__theme_header"><a href="#">{{theme_obj.0.theme_name}}</a></div>
+                {% for unit in theme_obj.1 %}
+                    <div class="sidebar__unit {% if step.unit == unit %}current{% endif %}"><a href="/unit/{{unit.unit_id}}">{{ unit.unit_name }}</a></div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Step content -->
+        <div class="flex-grow-1">
+            <div class="mx-auto mt-3 content-container">
+                <h1>{{step.step_name}}</h1>
+                <div v-if="qg_idx+1<=test.length">
+                    <div v-if="test[qg_idx].qg_text == ''" id="question_area" class="card p-4 mb-4">
+                        <!-- single question area -->
+                        <h6 class="question">[[ display_q_number ]]. [[ test[qg_idx].questions[0].question_text ]]</h6>
+                        <hr>
+                        <div> 
+                            <answer-radio 
+                                v-for="(qa, idx) in shuffleQuestionGroupAnswers(test[qg_idx]).questions[0].a"
+                                :key="test[qg_idx].questions[0].id+'-'+idx"
+                                :qa="qa"
+                                :idx="idx"
+                                :qid="test[qg_idx].questions[0].id"></answer-radio>
+                                <button class="btn btn-outline-primary" type="button"
+                                @click="submitQuestionGroup">Подтвердить</button>
+                        </div>
+                    </div>
+                    <div v-else class="p-4 mb-4 row flex-lg-row-reverse">
+                    <!-- Multiple question area -->
+                        <div class="col-12 col-lg-6 card overflow-auto p-4">
+                            <h6 class="question">Әтеш пен меруерт тас</h6>
+                            <p>[[test[qg_idx].qg_text]]</p>
+                        </div>
+                        <div class="col-12 col-lg-6 card p-3 overflow-auto">
+                            <div class="mb-3" v-for="(q, q_idx) in shuffleQuestionGroupAnswers(test[qg_idx]).questions" :key="q_idx">
+                                <h6 class="question">[[ display_q_number+q_idx ]]. [[q.question_text]]</h6>
+                                <hr>
+                                <div>
+                                    <answer-radio 
+                                        v-for="(qa, idx) in q.a"
+                                        :key="q.id+'-'+idx"
+                                        :qa="qa"
+                                        :idx="idx"
+                                        :qid="q.id"></answer-radio>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-primary" type="button"
+                                @click="submitQuestionGroup">Подтвердить</button>
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="card p-4 mb-4">
+                    <h6 class="question">Ваш результат [[ answers.filter(item=>item.correct).length ]] из [[answers.length]]</h6>
+                </div>
+                <div class="d-flex justify-content-between align-items-center px-4 px-md-5">
+                    <a class="btn btn-primary p-2 px-4"
+                        href="{{prev_step_url}}">Назад</a>
+                    <h5>{{ step.unit.author_name }}</h5>
+                    <a class="btn btn-primary p-2 px-4"
+                        href="{{next_step_url}}"
+                    >Далее</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+    console.log(axios.get("/tests/{{test_id}}/"))
+    const App = {
+        data() {
+            return {
+                qg_idx: 0,
+                display_q_number: 1,
+                test: [],
+                answers: [
+                    // true - correct, false - wrong
+                ],
+                passed_percentage: 0,
+            }
+        },
+        created(){
+            axios
+            .get('/tests/{{test_id}}/')
+            .then(response => (this.test = response.data));
+            axios
+            .get('/get-passed-percentage/',
+                {"params": {
+                    "user_id":"{{request.user.id}}",
+                    "course_id":"{{step.unit.theme.course_id}}"
+                }
+            })
+            .then(response => (this.passed_percentage = response.data.passed_percentage));
+        },
+        methods: {
+            shuffleQuestionGroupAnswers(qg) {
+                var temp = JSON.parse(JSON.stringify(qg));
+                temp.questions.forEach(question => {
+                    question.a = question.a.sort((a, b) => 0.5 - Math.random());
+                });
+                return temp;
+            },
+            submitQuestionGroup(){
+                let answer_array = this.answers;
+                this.test[this.qg_idx].questions.forEach(function(question, idx, questions){
+                    let selected = document.querySelector(`input[name='${question.id}']:checked`).value;
+                    answer_array.push({'id': parseInt(question.id), 'correct': selected==question.a[0]});
+                });
+                    this.display_q_number += this.test[this.qg_idx].questions.length;
+                    this.qg_idx++;
+                if(this.qg_idx+1>this.test.length){
+                    alert("You finished test");
+                    let data = JSON.stringify({"user_id": "{{request.user.id}}",
+                                                "course_id": "{{step.unit.theme.course_id}}",
+                                                "step_id": "{{step.step_id}}",
+                                                "q": this.answers});
+                    console.log(data);
+                    let headers = {"credentials": 'include',
+                                    "headers":{
+                                        "X-CSRFToken": "{{ csrf_token }}",
+                                        "Accept": "application/json",
+                                        "Content-Type": "application/json",
+                                        }
+                    };
+                    axios.post("/save-test/", data, headers);
+                }
+            },
+        },
+        delimiters: ["[[", "]]"],
+    }
+
+    var app = Vue.createApp(App);
+    app.component('answer-radio', {
+        props: ['qa', 'idx', 'qid'],
+        delimiters: ["[[", "]]"],
+        template: `
+        <div class="test-ans mb-3">
+            <input type="radio" :id="id" class="btn-check" :name="qid" :value="qa">
+            <label class="form-label" :for="id">
+                <span class="test-radio-letter">[[getLetterFromIdx(idx)]]</span>
+                <span class="answer-label">[[qa]]</span>
+            </label>
+        </div>`,
+        computed: {
+            id() {
+                return "option-" + this.qid + '-' + this.idx;
+            },
+        },
+        methods: {
+            getLetterFromIdx(idx){
+                if (idx==0) {
+                    return 'A';
+                } else if(idx==1) {
+                    return 'B';
+                } else if(idx==2) {
+                    return 'C';
+                } else if(idx==3) {
+                    return 'D';
+                }
+                return 'F';          
+            },
+        },
+    });
+    app.mount('#app');
+    </script>
+    <script src="{% static '/bootstrap/js/bootstrap.min.js' %}"></script>
+</body>
+{% endblock content %}

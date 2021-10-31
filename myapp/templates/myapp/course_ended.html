@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Шаг {{ step.step_order }}{% endblock title %}
+{% block content %}
+{% load static %}
+<body style="background-color: #F5F5F5">
+    <nav class="navbar navbar-light navbar-expand-md pb-2 pb-md-4 bg-white border-bottom">
+        <div class="container-fluid"><a class="navbar-brand d-inline-block d-md-none" href="/"><img src="{% static '/img/daiyndal-icon.png' %}" width="162" height="36"></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse mx-auto pt-md-4 px-2 position-relative" id="navcol-2">
+                <ul class="navbar-nav d-block d-md-none">
+                    <li class="nav-item"><a class="nav-link" href="/courses/">Каталог</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/my-courses/">Мои курсы</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/profile/">Профиль</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout/">Выйти</a></li>
+                </ul><a href="/"><img class="d-none d-md-inline-block" src="{% static '/img/daiyndal-icon.png' %}" width="162" height="36"></a>
+                <div class="nav-item dropdown d-none d-md-block position-absolute end-0"><a id="profile" class="mx-lg-3 nav-link" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding-left: 0; padding-right: 0;">{{request.user.user_firstname}}<i class="fas fa-user" style="font-size: 25px; margin-left: 10px"></i></a>
+                    <ul class="dropdown-menu" aria-labelledby="profile">
+                        <li class="dropdown-item disabled">{{ request.user }}</li>
+                        <li class="dropdown-item"><hr class="dropdown-divider" /></li>
+                        <li class="dropdown-item"><a href="/profile/">Профиль</a></li>
+                        <li class="dropdown-item"><a href="/my-courses/">Мои курсы</a></li>
+                        <li class="dropdown-item"><a href="/logout">Выйти</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="main gx-0">
+        <!-- Sidebar -->
+        <!-- Sidebar -->
+        <div class="d-none d-md-inline-flex flex-column flex-shrink-0 bg-white sidebar" style="max-width: 280px; min-width: 220px">
+            <div class="sidebar__header mb-3 p-3">
+                <h4>{{step.unit.theme.course.course_name}}</h4>
+                <p class="mb-1 small"><span id="percentage">45</span>% Пройдено</p>
+                <div class="progress">
+                    <div class="progress-bar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"><span class="visually-hidden" id="progress-bar-hidden">45%</span></div>
+                </div>
+            </div>
+            <ul class="nav"></ul>
+            <div class="flex-column mb-auto">
+                {% for theme_obj in themes_obj %}
+                <div class="sidebar__theme_header"><a href="#">{{theme_obj.0.theme_name}}</a></div>
+                {% for unit in theme_obj.1 %}
+                    <div class="sidebar__unit {% if step.unit == unit %} current{% endif %}"><a href="/unit/{{unit.unit_id}}">{{ unit.unit_name }}</a></div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Step content -->
+        <div class="flex-grow-1">
+            <div class="mx-auto mt-3 content-container">
+                <h1>Завершение курса</h1>
+                <div id="step-html-content">
+                    <p>Поздравляем мы завершили все материалы доступные по этому курсу на данный момент. Мы оповести вас когда курс будет обновлен.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{% static '/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        var passed_percentage = 0;
+        axios
+            .get('/get-passed-percentage/',
+                {"params": {
+                    "user_id":"{{request.user.id}}",
+                    "course_id":"{{course_id}}"
+                }
+            })
+            .then(function(response){ 
+                passed_percentage = response.data.passed_percentage;
+                document.getElementById('percentage').innerHTML = passed_percentage;
+                progress_bar = document.querySelector(".progress-bar");
+                progress_bar.ariaValueNow = passed_percentage;
+                progress_bar.style.width = passed_percentage+'%';
+                document.querySelector("#progress-bar-hidden").innerHTML = passed_percentage+'%';
+            });
+
+    </script>
+    <script src="{% static '/bootstrap/js/bootstrap.min.js' %}"></script>
+</body>
+{% endblock content %}

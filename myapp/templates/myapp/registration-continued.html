@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Регистрация{% endblock %}
+{% block content %}
+{% load static %}
+<body style="background-color: #F5F5F5;">
+    <div class="container-fluid">
+        <section style="margin: 3em 0em;">
+            <div class="row d-flex">
+                <div class="col text-center"><img src="{% static 'img/daiyndal-icon.png' %}" width="162" height="36"></div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <h2 class="text-center mt-4" style="font-family: Raleway, sans-serif;font-weight: bold;height: 36px;font-size: 36px;">Регистрация</h2>
+                    <p class="text-center text-secondary my-3" style="font-family: Raleway;">Ответьте на вопросы чтобы закончить регистрацию</p>
+                </div>
+            </div>
+            <div id="app" class="mx-auto px-2 px-md-5 py-4 mt-4" style="background: var(--bs-white);max-width: 570px;border-radius: 1.2rem;">
+                <form @submit="formValidate" method="POST" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-start" for="{{form.user_grade.id_for_label}}" style="width: 100%;font-size: 18px;">Год обучения</label>
+                        <select id="id_user_grade" name="user_grade" class="form-select" v-model="grade" :class="{ 'is-invalid': errors.lang }">
+                            <option value="" selected="">Выберите ваш класс</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-start" for="{{form.user_lang.id_for_label}}" style="width: 100%;font-size: 18px;">Язык обучения</label>
+                        <select id="id_user_lang" name="user_lang" class="form-select" v-model="lang" :class="{ 'is-invalid': errors.lang }">
+                            <option value="" selected>Выберите язык обучения</option>
+                            <option value="ru">Рус</option>
+                            <option value="kz">Қаз</option>
+                        </select></div>
+                    <div class="mb-3">
+                        <label class="form-label text-start" for="{{ form.user_phone_number.id_for_label }}" style="width: 100%;font-size: 18px;">Номер телефона</label>
+                        {{ form.user_phone_number }}
+                        <small class="form-text text-danger">[[ phoneHelp ]]</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-start" for="{{ form.user_school_name.id_for_label }}" style="width: 100%;font-size: 18px;">Школа</label>
+                        {{ form.user_school_name }}
+                        <small class="form-text text-danger">[[ schoolHelp ]]</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-start" for="{{ form.user_school_name.id_for_label }}" style="width: 100%;font-size: 18px;">Город или населенный пункт</label>
+                        {{ form.user_location }}
+                        <small class="form-text text-danger">[[ locationHelp ]]</small>
+                    </div>
+                    <button class="btn btn-primary d-block" type="submit" style="width: 100%;border-radius: 0.7rem;height: 50px;">Далее</button>
+                </form>
+            </div>
+        </section>
+    </div>
+    <script src="{% static '/bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script>
+    const App = {
+        data(){
+            return {
+                "phone": "",
+                "school": "",
+                "grade": "",
+                "lang": "",
+                "location": "",
+                errors: {
+                    "phone": false,
+                    "school": false,
+                    "grade": false,
+                    "lang": false,
+                    "location": false,
+                }
+            }
+        },
+        computed: {
+            phoneHelp(){
+                if (this.phone==""){
+                    return "";
+                }
+                if(!this.phoneValidate()){
+                    this.errors.phone = true;
+                    return "Введите верный номер мобильного телефона в формате 87771234133 или +77771234133";
+                }else{
+                    this.errors.phone = false;
+                    return "";
+                } 
+            },
+            schoolHelp(){
+                if(!this.schoolValidate()){
+                    return "Введите название школы в которой вы обучаетесь.";
+                } else {
+                    return "";
+                }
+            },
+            locationHelp(){
+                if(!((!this.errors.location && this.location=="") || this.locationValidate())){
+                    return "Введите название города или населенного пункта в котором вы проживаете.";
+                } else {
+                    return "";
+                }
+            }
+        },
+        methods: {
+            phoneValidate() {
+                const re = /^(\s*)?(\+)?([- _():=+]?\d[- _():=+]?){11,11}(\s*)?$/;
+                return re.test(this.phone);
+            },
+            schoolValidate(){
+                if(this.school!=""){
+                    this.errors.school = false;
+                    return true;
+                }
+                this.errors.school = true;
+                return false;
+            },
+            locationValidate(){
+                if(!(/^(\d*)$/.test(this.location))){
+                    this.errors.location = false;
+                    return true;
+                }
+                this.errors.location = true;
+                return false;
+            },
+            formValidate: function (e) {
+                let has_error = false;
+                if (!this.phoneValidate || this.phone=="") {
+                    this.errors.phone = true;
+                    has_error = true;
+                }
+                if (this.school=="") {
+                    this.errors.school = true;
+                    has_error = true;
+                }
+                if (this.location=="" || !this.locationValidate()){
+                    this.errors.location = true;
+                    has_error = true;    
+                }
+                if (this.lang==""){
+                    this.errors.lang = true;
+                    has_error = true;    
+                }
+                if (this.grade==""){
+                    this.errors.grade = true;
+                    has_error = true;    
+                }
+
+                if(has_error){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                return true;
+            }
+        },
+        delimiters: ["[[", "]]"],
+    }
+
+    Vue.createApp(App).mount('#app')
+    </script>
+</body>
+{% endblock content %}

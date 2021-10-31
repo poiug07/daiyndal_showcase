@@ -1,0 +1,30 @@
+{% load static %}
+<nav class="navbar navbar-light navbar-expand-md pb-2 pb-md-4 bg-white border-bottom">
+    <div class="container-fluid"><a class="navbar-brand d-inline-block d-md-none" href="#"><img src="{% static '/img/daiyndal-icon.png' %}" width="162" height="36"></a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-2"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse mx-auto pt-md-4 px-2 position-relative" id="navcol-2">
+            <ul class="navbar-nav d-block d-md-none">
+                <li class="nav-item"><a class="nav-link" href="/courses/">Каталог</a></li>
+                <li class="nav-item"><a class="nav-link" href="/my-courses/">Мои курсы</a></li>
+                <li class="nav-item"><a class="nav-link" href="/profile/">Профиль</a></li>
+                <li class="nav-item"><a class="nav-link" href="/logout/">Выйти</a></li>
+            </ul>
+            <a href="/"><img class="d-none d-md-inline-block" src="{% static '/img/daiyndal-icon.png' %}" width="162" height="36"></a>
+            <div class="d-none d-lg-flex step-progress mx-5 h-100 row gx-2">
+                {% for class in steps_complete %}
+                <div class="col">
+                    <div class="progress-step {{class}}"><a href="#"></a></div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="nav-item dropdown d-none d-md-block position-absolute end-0"><a id="profile" class="mx-lg-3 nav-link" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding-left: 0; padding-right: 0;">{{request.user.user_firstname}}<i class="fas fa-user" style="font-size: 25px; margin-left: 10px"></i></a>
+                <ul class="dropdown-menu" aria-labelledby="profile">
+                    <li class="dropdown-item disabled">{{ request.user }}</li>
+                    <li class="dropdown-item disabled"><hr class="dropdown-divider" /></li>
+                    <li class="dropdown-item"><a href="/profile/">Профиль</a></li>
+                    <li class="dropdown-item"><a href="/my-courses/">Мои курсы</a></li>
+                    <li class="dropdown-item"><a href="/logout">Выйти</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
